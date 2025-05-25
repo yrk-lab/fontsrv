@@ -18,9 +18,9 @@ $LIB:V:
 	cd libfreetype
 	mk install
 
-install:V:	$BIN/$TARG /sys/lib/fontsrv /sys/man/4/fontsrv.4
-/sys/lib/fontsrv:
-	cp lib/fontsrv /sys/lib/fontsrv
+install:V:	$BIN/$TARG /sys/lib/fontsrv.map /sys/man/4/fontsrv.4
+/sys/lib/fontsrv.map:
+	cp lib/fontsrv /sys/lib/fontsrv.map
 /sys/man/4/fontsrv.4: man/4/fontsrv.4
 	cp man/4/fontsrv.4 /sys/man/4/fontsrv.4
 
