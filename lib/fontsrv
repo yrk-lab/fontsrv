@@ -1,0 +1,45 @@
+# /sys/lib/postscript/font/fontmap
+# BUG hangs up: LucidaSans /sys/lib/postscript/font/LucidaSans
+LucidaSans-Demi /sys/lib/postscript/font/LucidaSans-Demi
+LucidaSans-Italic /sys/lib/postscript/font/LucidaSans-Italic
+LucidaSans-Typewriter83 /sys/lib/postscript/font/LucidaSans-Typewriter83
+LucidaTypewriter /sys/lib/postscript/font/LucidaTypewriter
+
+# /sys/lib/ghostscript/font/Fontmap
+# /sys/lib/ghostscript/font/Fontmap.GS
+URWBookmanL-DemiBold	/sys/lib/ghostscript/font/b018015l.pfb
+URWBookmanL-Ligh	/sys/lib/ghostscript/font/b018012l.pfb
+NimbusMonL-Regu	/sys/lib/ghostscript/font/n022003l.pfb
+URWGothicL-Book /sys/lib/ghostscript/font/a010013l.pfb
+URWGothicL-Demi	/sys/lib/ghostscript/font/a010015l.pfb
+NimbusSanL-Regu	/sys/lib/ghostscript/font/n019003l.pfb
+NimbusSanL-ReguCond	/sys/lib/ghostscript/font/n019043l.pfb
+URWPalladioL-Roma	/sys/lib/ghostscript/font/p052003l.pfb
+URWPalladioL-Bold	/sys/lib/ghostscript/font/p052004l.pfb
+CenturySchL-Roma	/sys/lib/ghostscript/font/c059013l.pfb
+NimbusRomNo9L-Regu	/sys/lib/ghostscript/font/n021003l.pfb
+StandardSymL	/sys/lib/ghostscript/font/s050000l.pfb
+
+# Postscript versions of TeX fonts
+CMR5 /sys/lib/postscript/font/cm/cmr5.pfa
+CMR6 /sys/lib/postscript/font/cm/cmr6.pfa
+
+# see also: /sys/man/fonts /lib/font/bit/MAP
+
+# Go fonts
+#Go-Bold /lib/font/tt/Go-Bold.ttf
+#Go-Italic /lib/font/tt/Go-Italic.ttf
+#Go-BoldItalic /lib/font/tt/Go-Bold-Italic.ttf
+#GoMedium /lib/font/tt/Go-Medium.ttf
+#GoMedium-Italic /lib/font/tt/Go-Medium-Italic.ttf
+#GoMono /lib/font/tt/Go-Mono.ttf
+#GoMono-Bold /lib/font/tt/Go-Mono-Bold.ttf
+#GoMono-BoldItalic /lib/font/tt/Go-Mono-Bold-Italic.ttf
+#GoMono-Italic /lib/font/tt/Go-Mono-Italic.ttf
+#GoRegular /lib/font/tt/Go-Regular.ttf
+#GoSmallcaps /lib/font/tt/Go-Smallcaps.ttf
+#GoSmallcaps-Italic /lib/font/tt/Go-Smallcaps-Italic.ttf
+#
+# other
+#Symbola /lib/font/tt/Symbola_hint.ttf
+#UnifontMedium /lib/font/tt/unifont-13.0.03.ttf

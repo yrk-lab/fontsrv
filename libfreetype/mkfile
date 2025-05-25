@@ -1,0 +1,242 @@
+</$objtype/mkfile
+
+LIB=libfreetype.a$O
+OFILES=\
+	afangles.$O \
+	afblue.$O \
+	afcjk.$O \
+	afdummy.$O \
+	afglobal.$O \
+	afhints.$O \
+	afindic.$O \
+	aflatin.$O \
+	afloader.$O \
+	afmodule.$O \
+	afpic.$O \
+	afranges.$O \
+	afshaper.$O \
+	afwarp.$O \
+	\
+	basepic.$O \
+	ftadvanc.$O \
+	ftcalc.$O \
+	ftdbgmem.$O \
+	ftgloadr.$O \
+	fthash.$O \
+	ftobjs.$O \
+	ftoutln.$O \
+	ftpic.$O \
+	ftrfork.$O \
+	ftsnames.$O \
+	ftstream.$O \
+	fttrigon.$O \
+	ftutil.$O \
+		ftapi.$O \
+		ftbbox.$O \
+		ftbdf.$O \
+		ftbitmap.$O \
+		ftcid.$O \
+		ftdebug.$O \
+		ftfntfmt.$O \
+		ftfstype.$O \
+		ftgasp.$O \
+		ftglyph.$O \
+		ftgxval.$O \
+		ftinit.$O \
+		ftlcdfil.$O \
+		ftmm.$O \
+		ftotval.$O \
+		ftstroke.$O \
+		ftsynth.$O \
+		ftsystem.$O \
+		fttype1.$O \
+		ftwinfnt.$O \
+	\
+	bdfdrivr.$O \
+	bdflib.$O \
+	\
+	ftcbasic.$O \
+	ftccache.$O \
+	ftcglyph.$O \
+	ftcimage.$O \
+	ftcmanag.$O \
+	ftccmap.$O \
+	ftcmru.$O \
+	ftcsbits.$O \
+	\
+	cffcmap.$O \
+	cffdrivr.$O \
+	cffgload.$O \
+	cffload.$O \
+	cffobjs.$O \
+	cffparse.$O \
+	cffpic.$O \
+	cf2arrst.$O \
+	cf2blues.$O \
+	cf2error.$O \
+	cf2font.$O \
+	cf2ft.$O \
+	cf2hints.$O \
+	cf2intrp.$O \
+	cf2read.$O \
+	cf2stack.$O \
+	\
+	cidgload.$O \
+	cidload.$O  \
+	cidobjs.$O \
+	cidparse.$O \
+	cidriver.$O \
+	\
+	gxvbsln.$O \
+	gxvcommn.$O \
+	gxvfeat.$O \
+	gxvjust.$O \
+	gxvkern.$O \
+	gxvlcar.$O \
+	gxvmod.$O \
+	gxvmort.$O \
+	gxvmort0.$O \
+	gxvmort1.$O \
+	gxvmort2.$O \
+	gxvmort4.$O \
+	gxvmort5.$O \
+	gxvmorx.$O \
+	gxvmorx0.$O \
+	gxvmorx1.$O \
+	gxvmorx2.$O \
+	gxvmorx4.$O \
+	gxvmorx5.$O \
+	gxvopbd.$O \
+	gxvprop.$O \
+	gxvtrak.$O \
+	\
+	otvbase.$O \
+	otvcommn.$O \
+	otvgdef.$O \
+	otvgpos.$O \
+	otvgsub.$O \
+	otvjstf.$O \
+	otvmath.$O \
+	otvmod.$O \
+	\
+	pcfdrivr.$O \
+	pcfread.$O \
+	pcfutil.$O \
+	\
+	pfrcmap.$O \
+	pfrdrivr.$O \
+	pfrgload.$O \
+	pfrload.$O \
+	pfrobjs.$O \
+	pfrsbit.$O \
+	\
+	afmparse.$O \
+	psauxmod.$O \
+	psconv.$O \
+	psobjs.$O \
+	t1cmap.$O \
+	t1decode.$O \
+	\
+	pshalgo.$O \
+	pshglob.$O \
+	pshmod.$O \
+	pshpic.$O \
+	pshrec.$O \
+	\
+	psmodule.$O \
+	pspic.$O \
+	\
+	ftraster.$O \
+	ftrend1.$O \
+	rastpic.$O \
+	\
+	pngshim.$O \
+	sfdriver.$O \
+	sfntpic.$O \
+	sfobjs.$O \
+	ttbdf.$O \
+	ttcmap.$O \
+	ttkern.$O \
+	ttload.$O \
+	ttmtx.$O \
+	ttpost.$O \
+	ttsbit.$O \
+	\
+	ftgrays.$O \
+	ftsmooth.$O \
+	ftspic.$O \
+	\
+	ttdriver.$O \
+	ttgload.$O \
+	ttgxvar.$O \
+	ttinterp.$O \
+	ttobjs.$O \
+	ttpic.$O \
+	ttpload.$O \
+	ttsubpix.$O \
+	\
+	t1afm.$O \
+	t1driver.$O \
+	t1gload.$O \
+	t1load.$O \
+	t1objs.$O \
+	t1parse.$O \
+	\
+	t42drivr.$O \
+	t42objs.$O \
+	t42parse.$O \
+	\
+	winfnt.$O \
+
+HFILES=include/ft2build.h
+
+</sys/src/cmd/mklib
+CFLAGS=-p -I./include -DFT2_BUILD_LIBRARY
+
+%.$O:	autofit/%.c
+	$CC $CFLAGS autofit/$stem.c
+%.$O:	base/%.c
+	$CC $CFLAGS base/$stem.c
+%.$O:	bdf/%.c
+	$CC $CFLAGS bdf/$stem.c
+%.$O:	cache/%.c
+	$CC $CFLAGS cache/$stem.c
+%.$O:	cff/%.c
+	$CC $CFLAGS cff/$stem.c
+%.$O:	cid/%.c
+	$CC $CFLAGS cid/$stem.c
+%.$O:	gxvalid/%.c
+	$CC $CFLAGS gxvalid/$stem.c
+%.$O:	otvalid/%.c
+	$CC $CFLAGS otvalid/$stem.c
+%.$O:	pcf/%.c
+	$CC $CFLAGS pcf/$stem.c
+%.$O:	pfr/%.c
+	$CC $CFLAGS pfr/$stem.c
+%.$O:	psaux/%.c
+	$CC $CFLAGS psaux/$stem.c
+%.$O:	pshinter/%.c
+	$CC $CFLAGS pshinter/$stem.c
+%.$O:	psnames/%.c
+	$CC $CFLAGS psnames/$stem.c
+%.$O:	raster/%.c
+	$CC $CFLAGS raster/$stem.c
+%.$O:	sfnt/%.c
+	$CC $CFLAGS sfnt/$stem.c
+%.$O:	smooth/%.c
+	$CC $CFLAGS smooth/$stem.c
+%.$O:	truetype/%.c
+	$CC $CFLAGS truetype/$stem.c
+%.$O:	type1/%.c
+	$CC $CFLAGS type1/$stem.c
+%.$O:	type42/%.c
+	$CC $CFLAGS type42/$stem.c
+%.$O:	winfonts/%.c
+	$CC $CFLAGS winfonts/$stem.c
+
+clean:V:
+	rm -f *.[$OS] */*.[$OS] $CLEANFILES
+
+nuke:V:
+	rm -f *.[$OS] */*.[$OS] $CLEANFILES
+	rm -f libfreetype.a[$OS]
