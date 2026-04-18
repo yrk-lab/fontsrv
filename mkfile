@@ -6,17 +6,17 @@ OFILES=\
 	freetype.$O \
 
 HFILES=dat.h
+LIBDIR=libfreetype
 
-CFLAGS=$CFLAGS -p -I./libfreetype/include
-LIB=libfreetype/libfreetype.a$O
+CFLAGS=$CFLAGS -p -I$LIBDIR/builds/plan9 -I$LIBDIR/include
+LIB=$LIBDIR/libfreetype.a$O
 
 BIN=/$objtype/bin
 
 </sys/src/cmd/mkone
 
 $LIB:V:
-	cd libfreetype
-	mk install
+	cd $LIBDIR; mk -f builds/plan9/mkfile install
 
 install:V:	$BIN/$TARG /sys/lib/fontsrv.map /sys/man/4/fontsrv.4
 /sys/lib/fontsrv.map:
@@ -25,6 +25,6 @@ install:V:	$BIN/$TARG /sys/lib/fontsrv.map /sys/man/4/fontsrv.4
 	cp man/4/fontsrv.4 /sys/man/4/fontsrv.4
 
 clean nuke:V:
-	@{ cd libfreetype; mk $target }
+	@{ cd $LIBDIR; mk -f builds/plan9/mkfile $target }
 	rm -f *.[$OS] [$OS].out $TARG
 

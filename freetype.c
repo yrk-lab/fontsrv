@@ -1,10 +1,8 @@
-#include <u.h>
-#include <libc.h>
+#include <ft2build.h>
+#include 	FT_FREETYPE_H
 #include <draw.h>
 #include <memdraw.h>
 #include <bio.h>
-#include <ft2build.h>
-#include 	FT_FREETYPE_H
 #include "dat.h"
 
 #define DBG	if(0)
