@@ -3,6 +3,8 @@ LICENSE.TXT
 docs
 	FTL.TXT
 	GPLv2.TXT
+	CHANGES
+builds
 include
 	+
 src

@@ -13,14 +13,5 @@ mk clean; mk 'LIBDIR=freetype-'$v
 
 # re-vendor
 #
-rm -r libfreetype.new
-mkdir -p libfreetype.new
-ramfs
-v=VER-2-13-2
-hget https://github.com/freetype/freetype/archive/refs/tags/$v.tar.gz | 
-	@{builtin cd /tmp && tar xz} &&
-	disk/mkfs -s /tmp/freetype-$v -d libfreetype.new vendor.proto &&
-	dircp port libfreetype.new
-mk clean; mk 'LIBDIR=libfreetype.new'
-# mv libfreetype libfreetype.old && mv libfreetype.new libfreetype
-# rm -r libfreetype.old 
+mk vendor
+mk vendor 'FT=VER-2-13-2'

@@ -30,3 +30,14 @@ clean nuke:V:
 	@{ cd $LIBDIR; mk -f builds/plan9/mkfile $target }
 	rm -f *.[$OS] [$OS].out $TARG
 
+FT=VER-2-13-2
+
+vendor:V:
+	rm -rf libfreetype.new; mkdir -p libfreetype.new
+	hget https://github.com/freetype/freetype/archive/refs/tags/$FT.tar.gz | tar xz
+	disk/mkfs -s freetype-$FT -d libfreetype.new vendor.proto
+	dircp port libfreetype.new
+	mk nuke
+	rm -rf libfreetype freetype-$FT
+	mv libfreetype.new libfreetype
+
