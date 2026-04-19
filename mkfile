@@ -37,7 +37,8 @@ vendor:V:
 	hget https://github.com/freetype/freetype/archive/refs/tags/$FT.tar.gz | tar xz
 	disk/mkfs -s freetype-$FT -d libfreetype.new vendor.proto
 	dircp port libfreetype.new
-	mk nuke
+	sed -f fixint.sed freetype-$FT/src/truetype/ttgload.c > libfreetype.new/src/truetype/ttgload.c
 	rm -rf libfreetype freetype-$FT
 	mv libfreetype.new libfreetype
+	mk clean
 

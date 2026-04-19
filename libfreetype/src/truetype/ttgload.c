@@ -375,7 +375,7 @@
     {
       *cont = FT_NEXT_USHORT( p );
 
-      if ( *cont <= last )
+      if ( (FT_Int)*cont <= last )
         goto Invalid_Outline;
 
       last = *cont;
