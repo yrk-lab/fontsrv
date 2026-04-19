@@ -30,7 +30,7 @@ clean nuke:V:
 	@{ cd $LIBDIR; mk -f builds/plan9/mkfile $target }
 	rm -f *.[$OS] [$OS].out $TARG
 
-FT=VER-2-13-3
+FT=VER-2-14-3
 
 vendor:V:
 	rm -rf libfreetype.new; mkdir -p libfreetype.new
