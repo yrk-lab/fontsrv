@@ -5,344 +5,254 @@
 #include <bio.h>
 #include "dat.h"
 
-#define DBG	if(0)
-
+static FcConfig    *fc;
 static FT_Library  lib;
 static int dpi = 96;
 
-enum {
-	Rnullpic = 0x2400,	// Graphic pictures for control codes
-};
-
-static int ftloadmemimage(Memimage*, Rectangle, FT_Bitmap*);
-static void drawfcbox(Memimage*, Fontchar*, int, int);
-static char* fterrstr(int);
-
-static Xfont*
-allocxfont(void)
-{
-	Xfont* font;
-
-	xfont = realloc(xfont, (nxfont+1)*sizeof xfont[0]);
-	font = &xfont[nxfont];
-	memset(font, 0, sizeof *font);
-	nxfont++;
-	return font;
-}
-
 void
-xfontinit(void)
+loadfonts(void)
 {
-	FT_Face face;
-	FT_Error err;
-	Biobuf *b;
-	Xfont *xf;
-	char *s, *file, *line, *f[3];
-	int ntok;
+	int i;
+	FT_Error e;
+	FcFontSet *sysfonts;
 
-	memimageinit();
+	if(!FcInit() || (fc=FcInitLoadConfigAndFonts()) == NULL) {
+		fprint(2, "fontconfig initialization failed\n");
+		exits("fontconfig failed");
+	}
 
-	if((err = FT_Init_FreeType(&lib)) != 0){
-		fprint(2, "freetype initialization failed: %s\n", fterrstr(err));
+	e = FT_Init_FreeType(&lib);
+	if(e) {
+		fprint(2, "freetype initialization failed: %d\n", e);
 		exits("freetype failed");
 	}
 
-	file = "/sys/lib/fontsrv.map";
-	b = Bopen(file, OREAD);
-	while((line = Brdline(b, '\n')) != nil){
-		line[Blinelen(b)-1] = 0;
-		s = strchr(line, '#');
-		if(s != nil && (s == line || s[-1] == ' ' || s[-1] == '\t'))
-			*s = '\0'; 	/* chop comment iff after whitespace */
-		ntok = tokenize(line, f, nelem(f));
-		switch(ntok){
-		case 1:
-			if((err = FT_New_Face(lib, f[0], 0, &face)) != 0){
-				fprint(2, "%s: load failed: %s\n", f[0], fterrstr(err));
-				continue;
-			}
-			xf = allocxfont();
-			xf->name = smprint("%s-%s", face->family_name, face->style_name);
-			xf->fontfile = strdup(f[0]);
-			FT_Done_Face(face);
-			break;
-		case 2:
-			xf = allocxfont();
-			xf->name = strdup(f[0]);
-			xf->fontfile = strdup(f[1]);
-			break;
-		}
-	}
-	Bterm(b);
-}
+	sysfonts = FcConfigGetFonts(fc, FcSetSystem);
 
-char*
-xfload(Xfont *f)
-{
-	FT_Face face;
-	FT_Error err;
-	FT_ULong c;
-	FT_UInt gi;
-	int page;
-	double k;
+	xfont = emalloc9p(sysfonts->nfont*sizeof xfont[0]);
+	memset(xfont, 0, sysfonts->nfont*sizeof xfont[0]);
+	for(i=0; i<sysfonts->nfont; i++) {
+		FcChar8 *fullname, *fontfile;
+		int index;
+		FcPattern *pat = sysfonts->fonts[i];
 
-	if(f->loaded)
-		return nil;
+		if(FcPatternGetString(pat, FC_POSTSCRIPT_NAME, 0, &fullname) != FcResultMatch ||
+		   FcPatternGetString(pat, FC_FILE, 0, &fontfile) != FcResultMatch     ||
+		   FcPatternGetInteger(pat, FC_INDEX, 0, &index) != FcResultMatch)
+			continue;
 
-	err = FT_New_Face(lib, f->fontfile, f->index, &face);
-	if(err != 0){
-		fprint(2, "%s: load failed: %s\n", f->fontfile, fterrstr(err));
-		return fterrstr(err);
+		xfont[nxfont].name     = strdup((char*)fullname);
+		xfont[nxfont].fontfile = strdup((char*)fontfile);
+		xfont[nxfont].index    = index;
+		nxfont++;
 	}
 
-	if(!FT_IS_SCALABLE(face)){
-		fprint(2, "%s: bitmap fonts are not supported\n", f->fontfile);
-		FT_Done_Face(face);
-		return "bitmap fonts are not supported";
-	}
-
-	f->ptheight = (face->ascender - face->descender) * dpi/72.0 / face->units_per_EM;
-	f->ptascent = face->ascender * dpi/72.0 / face->units_per_EM;
-	k = dpi/72.0 /face->units_per_EM;
-	f->ptxmax = (int)(k*face->max_advance_width + 0.99999999);
-	f->size = -1;
-	
-	for(c=FT_Get_First_Char(face, &gi); gi != 0; c=FT_Get_Next_Char(face, c, &gi)){
-		if(c > Runemax)
-			break;
-		page = c/PageSize;
-		if(!f->page[page]){
-			f->page[page] = 1;
-			f->npage++;
-		}
-	}
-
-	FT_Done_Face(face);
-	f->loaded = 1;
-	return nil;
+	FcFontSetDestroy(sysfonts);
 }
 
 void
-xfscale(Xfont *font, int size)
+load(XFont *f)
 {
-	if(font->size == size)
+	FT_Face face;
+	FT_Error e;
+	FT_ULong charcode;
+	FT_UInt glyph_index;
+	int i;
+
+	if(f->loaded)
 		return;
-	font->size = size;
-	font->height = size*font->ptheight  + 0.99999999;
-	font->ascent = size*font->ptascent + 0.99999999;
-	font->xmax = size*font->ptxmax + 0.99999999;
+
+	e = FT_New_Face(lib, f->fontfile, f->index, &face);
+	if(e){
+		fprint(2, "load failed for %s (%s) index:%d\n", f->name, f->fontfile, f->index);
+		return;
+	}
+	if(!FT_IS_SCALABLE(face)) {
+		fprint(2, "%s is a non scalable font, skipping\n", f->name);
+		FT_Done_Face(face);
+		f->loaded = 1;
+		return;
+	}
+	f->unit = face->units_per_EM;
+	f->height = (int)((face->ascender - face->descender) * 1.35);
+	f->originy = face->descender * 1.35; // bbox.yMin (or descender)  is negative, because the baseline is y-coord 0
+
+	for(charcode=FT_Get_First_Char(face, &glyph_index); glyph_index != 0;
+		charcode=FT_Get_Next_Char(face, charcode, &glyph_index)) {
+
+		int idx = charcode/SubfontSize;
+
+		if(charcode > Runemax)
+			break;
+
+		if(!f->range[idx])
+			f->range[idx] = 1;
+	}
+	FT_Done_Face(face);
+
+	// libdraw expects U+0000 to be present
+	if(!f->range[0])
+		f->range[0] = 1;
+
+	// fix up file list
+	for(i=0; i<nelem(f->range); i++)
+		if(f->range[i])
+			f->file[f->nfile++] = i;
+
+	f->loaded = 1;
 }
 
+
 Memsubfont*
-xfsubfont(Xfont *xf, char *name, int start, int n, int mono)
+mksubfont(XFont *xf, char *name, int lo, int hi, int size, int antialias)
 {
-	FT_Error err;
 	FT_Face face;
-	FT_GlyphSlot glyph;
-	FT_Bitmap *bits;
-	int x, xmax, c, rune, height, ascent, lmode, chan;
-	Fontchar *info, *i;
-	Memimage *m, *m1, *mc;
+	FT_Error e;
+	Memimage *m, *mc, *m1;
+	double pixel_size;
+	int w, x, y, y0;
+	int i;
+	Fontchar *fc, *fc0;
 	Memsubfont *sf;
+	//Point rect_points[4];
 
 	USED(name);
 
-	if((err = FT_New_Face(lib, xf->fontfile, xf->index, &face)) != 0){
-		werrstr("can't load: %s", fterrstr(err));
+	e = FT_New_Face(lib, xf->fontfile, xf->index, &face);
+	if(e){
+		fprint(2, "load failed for %s (%s) index:%d\n", xf->name, xf->fontfile, xf->index);
 		return nil;
 	}
-	if((err = FT_Set_Char_Size(face, 0, xf->size<<6, dpi, dpi)) != 0){
+
+	e = FT_Set_Char_Size(face, 0, size<<6, dpi, dpi);
+	if(e){
+		fprint(2, "FT_Set_Char_Size failed\n");
 		FT_Done_Face(face);
-		werrstr("can't scale: %s", fterrstr(err));
 		return nil;
 	}
 
-	chan = mono? GREY1:GREY8;
-//	n = hi-lo+1;
-	height = xf->height;
-	ascent = xf->ascent;
-	xmax = xf->xmax;
-	if(xmax == 0)
-		xmax = height;
+	pixel_size = (dpi*size)/72.0;
+	w = x = (int)((face->max_advance_width) * pixel_size/xf->unit + 0.99999999);
+	y = (int)((face->ascender - face->descender) * pixel_size/xf->unit + 0.99999999);
+	y0 = (int)(-face->descender * pixel_size/xf->unit + 0.99999999);
 
-	FT_Set_Pixel_Sizes(face, 0, height);		// just in case
-
-	m = allocmemimage(Rect(0, 0, n*xmax, height), chan);
-	mc = allocmemimage(Rect(0, 0, 3*xmax, height), chan);
-	info = malloc((n+1) * sizeof info[0]);
-	if(m == nil || mc == nil || info == nil) {
-		werrstr("mksubfont: alloc: %r");
+	m = allocmemimage(Rect(0, 0, x*(hi+1-lo)+1, y+1), antialias ? GREY8 : GREY1);
+	if(m == nil) {
+		FT_Done_Face(face);
+		return nil;
+	}
+	mc = allocmemimage(Rect(0, 0, x+1, y+1), antialias ? GREY8 : GREY1);
+	if(mc == nil) {
+		freememimage(m);
+		FT_Done_Face(face);
+		return nil;
+	}
+	memfillcolor(m, DBlack);
+	memfillcolor(mc, DBlack);
+	fc = malloc((hi+2 - lo) * sizeof fc[0]);
+	sf = malloc(sizeof *sf);
+	if(fc == nil || sf == nil) {
 		freememimage(m);
 		freememimage(mc);
-		free(info);
+		free(fc);
+		free(sf);
 		FT_Done_Face(face);
 		return nil;
 	}
+	fc0 = fc;
 
-	memfillcolor(m, DBlack);
+	//rect_points[0] = mc->r.min;
+	//rect_points[1] = Pt(mc->r.max.x, mc->r.min.y);
+	//rect_points[2] = mc->r.max;
+	//rect_points[3] = Pt(mc->r.min.x, mc->r.max.y);
 
-	lmode = FT_LOAD_RENDER;
-	if(mono)
-		lmode |= FT_LOAD_TARGET_MONO;
-	if(!mono && xf->size > 9)
-		lmode |= FT_LOAD_NO_HINTING;
+	x = 0;
+	for(i=lo; i<=hi; i++, fc++) {
+		int k, r;
+		int advance;
 
-	info[0].x = 0;
-	for(c=0; c<n; c++){
-		i = &info[c];
-		i->left = 0;
-		i->top = 0;
-		i->bottom = height;
-		i->width = 0;
-		(i+1)->x = i->x;
+		memfillcolor(mc, DBlack);
 
-		rune = start+c;
-		if(FT_Load_Char(face, rune, lmode) != 0){
-			if(rune == 0){
-				/* must have a valid fallback char */
-				drawfcbox(m, i, height, ascent);
-				continue;
-			}else if(rune < 32){
-				if(FT_Load_Char(face, rune+Rnullpic, lmode) != 0)
-					continue;
-			}else
-				continue;
+		fc->x = x;
+		fc->top = 0;
+		fc->bottom = Dy(m->r);
+		e = 1;
+		k = FT_Get_Char_Index(face, i);
+		if(k != 0) {
+			e = FT_Load_Glyph(face, k, FT_LOAD_RENDER|FT_LOAD_NO_AUTOHINT|(antialias ? 0:FT_LOAD_TARGET_MONO));
 		}
-		glyph = face->glyph;
-		bits = &face->glyph->bitmap;
-
-		i->left = glyph->bitmap_left;
-		i->top = ascent - glyph->bitmap_top;
-		i->bottom = i->top+bits->rows;
-		if(i->bottom > height+1)
-			i->bottom = height+1;
-		i->width = (glyph->advance.x+(1<<5))>>6;
-		(i+1)->x = i->x+bits->width;
-
-		if(i->left < 0){
-			/* fix artifacts when e.g. Symbola lets "j" on top of "e" in "ej" */
-			i->width += -i->left;
-			i->left = 0;
-		}
-		if(rune == 0 && (i->width == 0 || i->x == (i+1)->x)){
-			/* must have a valid fallback char */
-			drawfcbox(m, i, height, ascent);
+		if(e || face->glyph->advance.x <= 0) {
+			fc->width = 0;
+			fc->left = 0;
+			if(i == 0) {
+				drawpjw(m, fc, x, w, y, y - y0);
+				x += fc->width;
+			}
 			continue;
 		}
 
-		ftloadmemimage(mc, Rect(0, 0, bits->width, bits->rows), bits);
-		memimagedraw(m, Rect(i->x, i->top, (i+1)->x, i->bottom), mc, mc->r.min, nil, ZP, S);
-	}
-	freememimage(mc);
+		FT_Bitmap *bitmap = &face->glyph->bitmap;
+		uchar *base = byteaddr(mc, mc->r.min);
+		advance = (face->glyph->advance.x+32) >> 6;
 
-	x = info[n].x;
-	if(mono)
-		x += -x & 31;
-	else
-		x += -x & 3;
-	m1 = allocmemimage(Rect(0, 0, x, height), m->chan);
-	if(m1 == nil){
-		freememimage(m);
-		free(info);
-		FT_Done_Face(face);
-		return nil;
+		for(r=0; r < bitmap->rows; r++)
+			memmove(base + r*mc->width*sizeof(u32int), bitmap->buffer + r*bitmap->pitch, bitmap->pitch);
+
+		memimagedraw(m, Rect(x, 0, x + advance, y), mc,
+			Pt(-face->glyph->bitmap_left, -(y - y0 - face->glyph->bitmap_top)),
+			memopaque, ZP, S);
+
+		fc->width = advance;
+		fc->left = 0;
+		x += advance;
+
+#ifdef DEBUG_FT_BITMAP
+		for(r=0; r < bitmap->rows; r++) {
+			int c;
+			uchar *span = bitmap->buffer+(r*bitmap->pitch);
+			for(c = 0; c < bitmap->width; c++) {
+				fprint(1, "%02x", span[c]);
+			}
+			fprint(1,"\n");
+		}
+#endif
+
+#ifdef DEBUG_9_BITMAP
+		for(r=0; r < mc->r.max.y; r++) {
+			int c;
+			uchar *span = base+(r*mc->width*sizeof(u32int));
+			for(c = 0; c < Dx(mc->r); c++) {
+				fprint(1, "%02x", span[c]);
+			}
+			fprint(1,"\n");
+		}
+#endif
 	}
+	fc->x = x;
+
+	// round up to 32-bit boundary
+	// so that in-memory data is same
+	// layout as in-file data.
+	if(x == 0)
+		x = 1;
+	if(y == 0)
+		y = 1;
+	if(antialias)
+		x += -x & 3;
+	else
+		x += -x & 31;
+	m1 = allocmemimage(Rect(0, 0, x, y), antialias ? GREY8 : GREY1);
 	memimagedraw(m1, m1->r, m, m->r.min, memopaque, ZP, S);
 	freememimage(m);
+	freememimage(mc);
 
-	sf = allocmemsubfont(nil, n, height, ascent, info, m1);
-	if(sf == nil){
-		freememimage(m1);
-		free(info);
-		FT_Done_Face(face);
-		return nil;
-	}
+	sf->name = nil;
+	sf->n = hi+1 - lo;
+	sf->height = Dy(m1->r);
+	sf->ascent = Dy(m1->r) - y0;
+	sf->info = fc0;
+	sf->bits = m1;
 
 	FT_Done_Face(face);
 	return sf;
-}
-
-static int
-ftloadmemimage(Memimage *i, Rectangle r, FT_Bitmap* bits)
-{
-	uchar *q;
-	int n, ndata, y, bpl;
-
-	switch(bits->pixel_mode){
-	case FT_PIXEL_MODE_MONO:
-		if(i->depth != 1){
-			werrstr("bad pixel mode %d for depth %d", bits->pixel_mode, i->depth);
-			return -1;
-		}
-		break;
-	case FT_PIXEL_MODE_GRAY:
-		if(i->depth != 8){
-			werrstr("bad pixel mode %d for depth %d", bits->pixel_mode, i->depth);
-			return -1;
-		}
-		break;
-	}
-
-	q = bits->buffer;
-	bpl = bits->pitch;
-	ndata = 0;
-
-	for(y=r.min.y; y < r.max.y; y++, q += bpl){
-		n = loadmemimage(i, Rect(r.min.x, y, r.max.x, y+1), q, bits->width);
-		if(n < 0)
-			return -1;
-		ndata += n;
-	}
-
-	return ndata;
-}
-
-static void
-drawfcbox(Memimage* m, Fontchar* i, int height, int ascent)
-{
-	int w;
-	Rectangle r;
-
-	w = height - ascent;
-	if(w < 9)
-		w = 9;
-	(i+1)->x = i->x+w;
-	i->width = w+1;
-	i->left = 1;
-	i->top = 0;
-	i->bottom = ascent;
-
-	r = Rect(i->x, i->top, (i+1)->x, i->bottom);
-	memimagedraw(m, r, memwhite, ZP, nil, ZP, S);
-	memimagedraw(m, insetrect(r, 2), memblack, ZP, nil, ZP, S);
-}
-
-
-/*
- * get the freetype error strings - lifted from /usr/inferno/libfreetype/freetype.c
- */
-
-#define FT_NOERRORDEF_(l,c,t)
-#define FT_ERRORDEF_(l,c,t)	c,t,
-
-static struct FTerr {
-	int		code;
-	char*	text;
-} fterrs[] = {
-#include FT_ERROR_DEFINITIONS_H	/* "fterrdef.h" */
-	-1, "",
-};
-
-static char*
-fterrstr(int code)
-{
-	int i;
-
-	if(code == 0)
-		return nil;
-	for(i = 0; fterrs[i].code > 0; i++) {
-		if(fterrs[i].code == code)
-			return fterrs[i].text;
-	}
-	return "unknown FreeType error";
 }
