@@ -4,6 +4,8 @@ TARG=fontsrv
 OFILES=\
 	fontsrv.$O \
 	freetype.$O \
+	fc.$O\
+	pjw.$O\
 
 HFILES=dat.h
 LIBDIR=libfreetype
