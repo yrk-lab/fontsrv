@@ -50,7 +50,7 @@ enum
 	Qsubfontfile,
 };
 
-#define QTYPE(p) ((p) & 0xF)
+#define QTYPE(p) ((uint)(p) & 0xF)
 #define QFONT(p) (((p) >> 4) & 0xFFFF)
 #define QSIZE(p) (((p) >> 20) & 0xFF)
 #define QANTIALIAS(p) (((p) >> 28) & 0x1)
