@@ -55,7 +55,7 @@ FcConfigGetFonts(FcConfig*, int)
 	FcFontSet* fset;
 	FcPattern* d;
 	Biobuf *b;
-	char *s, *file, *line, *f[3];
+	char *s, *pr, *file, *line, *f[3];
 	int ntok;
 
 	fset = allocfontset();
@@ -71,8 +71,13 @@ FcConfigGetFonts(FcConfig*, int)
 		switch(ntok){
 		case 1:
 			d = allocpat();
-			d->name = strdup(f[0]);
 			d->fontfile = strdup(f[0]);
+			pr = utfrrune(f[0], '/');
+			if(pr)
+				pr++;
+			else
+				pr = f[0];
+			d->name = strdup(pr);
 			appendfontset(fset, d);
 			break;
 		case 2:
