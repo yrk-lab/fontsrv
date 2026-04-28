@@ -60,6 +60,7 @@
 #define ft_fseek     fseek
 #define ft_ftell     ftell
 #define ft_snprintf  snprintf
+#define ft_sprintf sprintf 
 
 #define ft_qsort  qsort
 
