@@ -15,6 +15,8 @@ LIBHFILES=$LIBDIR/builds/plan9/p9ftopt.h
 
 HFILES=dat.h $LIBHFILES
 
+CLEANFILES=pax_global_header
+
 CFLAGS=$CFLAGS -p -I$LIBDIR/builds/plan9 -I$LIBDIR/include \
 	-D'FT_CONFIG_OPTIONS_H=<p9ftopt.h>' \
 	-D'FT_CONFIG_STANDARD_LIBRARY_H=<p9lib.h>' \
@@ -34,7 +36,7 @@ install:V:	$BIN/$TARG /sys/lib/fontsrv.map /sys/man/4/fontsrv.4
 
 clean nuke:V:
 	@{ cd $LIBDIR; mk $target }
-	rm -f *.[$OS] [$OS].out $TARG
+	rm -f *.[$OS] [$OS].out $TARG $CLEANFILES
 
 release:V:
 	mk nuke
@@ -42,12 +44,6 @@ release:V:
 
 freetype-%:
 	hget https://github.com/freetype/freetype/archive/refs/tags/$stem.tar.gz | tar xz
-	f=freetype-$stem/src/truetype/ttgload.c
-		sed -f port/builds/plan9/fixint.sed $f >$f.new && mv $f.new $f
-	f=freetype-$stem/include/freetype/fttypes.h
-		sed '/#include <stddef.h>/d' $f >$f.new && mv $f.new $f
-	f=freetype-$stem/include/freetype/config/ftmodule.h
-		sed '/(sdf|svg)_renderer_class/d' $f >$f.new && mv $f.new $f
 	dircp port freetype-$stem
 	sed 1q freetype-$stem/README	# version
 
