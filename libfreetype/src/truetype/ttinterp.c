@@ -7515,7 +7515,10 @@
     }
 
     /* reset graphics state */
-    exec->GS         = size->GS;
+    /* Note: use exec->size->GS instead of the size parameter, which may   */
+    /* be corrupted on Plan 9/ARM due to register clobbering by the struct  */
+    /* copies above.  exec->size == size is guaranteed by TT_Load_Context.  */
+    exec->GS         = exec->size->GS;
     exec->func_round = (TT_Round_Func)Round_To_Grid;
     Compute_Funcs( exec );
 
