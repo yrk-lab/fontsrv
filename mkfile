@@ -23,7 +23,7 @@ BIN=/$objtype/bin
 
 </sys/src/cmd/mkone
 
-$LIB $LIBHFILES:
+$LIB $LIBHFILES: $LIBDIR
 	cd $LIBDIR; mk install
 
 install:V:	$BIN/$TARG /sys/lib/fontsrv.map /sys/man/4/fontsrv.4
@@ -40,14 +40,20 @@ release:V:
 	mk nuke
 	rm -rf freetype-*
 
-FT=VER-2-14-3
+freetype-%:
+	hget https://github.com/freetype/freetype/archive/refs/tags/$stem.tar.gz | tar xz
+	f=freetype-$stem/src/truetype/ttgload.c
+		sed -f port/builds/plan9/fixint.sed $f >$f.new && mv $f.new $f
+	f=freetype-$stem/include/freetype/fttypes.h
+		sed '/#include <stddef.h>/d' $f >$f.new && mv $f.new $f
+	f=freetype-$stem/include/freetype/config/ftmodule.h
+		sed '/(sdf|svg)_renderer_class/d' $f >$f.new && mv $f.new $f
+	dircp port freetype-$stem
+	sed 1q freetype-$stem/README	# version
 
-freetype-$FT:
-	hget https://github.com/freetype/freetype/archive/refs/tags/$FT.tar.gz | tar xz
+FT=VER-2-14-3
 
 vendor:V: freetype-$FT
 	rm -rf libfreetype; mkdir -p libfreetype 
-	dircp port libfreetype	# upstreamed
 	disk/mkfs -s freetype-$FT -d libfreetype vendor.proto
-	sed -f port/builds/plan9/fixint.sed freetype-$FT/src/truetype/ttgload.c > libfreetype/src/truetype/ttgload.c # 2.13.3-2.14.3 # upstreamed
-	sed '/#include <stddef.h>/d' freetype-$FT/include/freetype/fttypes.h > libfreetype/include/freetype/fttypes.h # upstreamed
+	sed 1q libfreetype/README	# version

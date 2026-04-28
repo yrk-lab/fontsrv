@@ -35,10 +35,10 @@ OFILES=\
 	src/pshinter/pshinter.$O \
 	src/psnames/psnames.$O \
 	src/raster/raster.$O \
-	src/sdf/sdf.$O \
+#	src/sdf/sdf.$O \
 	src/sfnt/sfnt.$O \
 	src/smooth/smooth.$O \
-	src/svg/svg.$O \
+#	src/svg/svg.$O \
 	src/truetype/truetype.$O \
 	src/type1/type1.$O \
 	src/type42/type42.$O \
