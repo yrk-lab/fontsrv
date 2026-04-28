@@ -292,11 +292,18 @@
     FT_FREE( exec->glyphIns );
     exec->glyphSize = 0;
 
-    exec->pointSize  = size->point_size;
-    exec->tt_metrics = size->ttmetrics;
-    exec->metrics    = *size->metrics;
+    /* Note: use exec->size->... rather than size->... for the fields below. */
+    /* On Plan 9/ARM the 5c compiler may leave the size argument (R2) in the */
+    /* caller-saved register R2 without spilling it to a callee-saved         */
+    /* register.  FT_FREE above calls ft_mem_free which clobbers R2, leaving  */
+    /* size with a garbage value before these assignments are reached.         */
+    /* exec->size == size is guaranteed by the assignment above.              */
+    /* (See issue #9 for the analogous TT_Run_Context fix.)                   */
+    exec->pointSize  = exec->size->point_size;
+    exec->tt_metrics = exec->size->ttmetrics;
+    exec->metrics    = *exec->size->metrics;
 
-    exec->twilight   = size->twilight;
+    exec->twilight   = exec->size->twilight;
   }
 
 
@@ -2339,6 +2346,17 @@
 
     V.x = Vx;
     V.y = Vy;
+
+    /* Pre-initialise *R so that R is accessed before FT_Vector_NormLen.   */
+    /* On Plan 9/ARM the 5c compiler may leave the R argument (third        */
+    /* parameter, R2) in the caller-saved register R2 and not spill it to   */
+    /* a callee-saved register when it is only observed *after* a call.     */
+    /* FT_Vector_NormLen contains divisions that are emitted as function    */
+    /* calls on ARM, clobbering R2 before we reach lines 2345-2346.         */
+    /* By referencing *R here the compiler is forced to treat R as live     */
+    /* across the call and allocate it in a callee-saved register.          */
+    /* (See issue #9 for the analogous TT_Run_Context fix.)                 */
+    R->x = 0;
 
     FT_Vector_NormLen( &V );
 
