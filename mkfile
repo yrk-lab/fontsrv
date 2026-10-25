@@ -44,10 +44,10 @@ release:V:
 
 freetype-%:
 	hget https://github.com/freetype/freetype/archive/refs/tags/$stem.tar.gz | tar xz
-	dircp port freetype-$stem
+	# dircp port freetype-$stem	# upstreamed in 2.15.0
 	sed 1q freetype-$stem/README	# version
 
-FT=VER-2-14-3
+FT=VER-2-15-0
 
 vendor:V: freetype-$FT
 	rm -rf libfreetype; mkdir -p libfreetype 

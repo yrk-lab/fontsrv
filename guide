@@ -1,22 +1,46 @@
+mk 'LIBDIR=/usr/glenda/src/freetype'
 mk install
 mk clean
 mk nuke
-# mk release
+mk release
+
+git/diff
+git/fs; git/walk -f M
+git/fs; git/walk -f RMAU
+echo git/add `{rfork n; git/fs; git/walk -c -f U}
+echo '#' git/commit -m '''some message'''  `{rfork n; git/fs; git/walk -c -f RMA}
+
+git/branch front
+git/commit -m 'libfreetype: upgrade FreeType to 2.15.0' ...
+git/push -u github
+git/log -sn10
+window -m
+
+rfork n; rm /srv/font; 6.out; window -m page /mnt/font/Go-Italic/20a/x000060.bit
+rm /srv/font; 6.out
 
 # full freetype checkout - useful for bisecting:
 #
-mk 'LIBDIR=freetype-VER-2-7-1' # nuke
-# rm -r freetype-VER-*
+v=VER-2-13-3
+hget https://github.com/freetype/freetype/archive/refs/tags/$v.tar.gz | tar xz
+dircp port freetype-$v/
+mk clean; mk 'LIBDIR=freetype-'$v
+# rm -r freetype-$v
 
 git/clone https://github.com/freetype/freetype.git freetype-git
 mk 'LIBDIR=freetype-git'
-
+ 
 # re-vendor
 #
 mk vendor
-mk vendor 'FT=VER-2-7-1'
+mk vendor 'FT=VER-2-15-0'
 
 # some tests
 rm -f /srv/font; 5.out; file /mnt/font/Go-BoldItalic/18a/x000040.bit
 # expect:
 # /mnt/font/Go-BoldItalic/18a/x000040.bit: plan 9 image, depth 8
+
+9fs sources; git/pull -u contrib
+git/push
+git/push -u github
+window -m
