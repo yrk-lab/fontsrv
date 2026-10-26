@@ -62,6 +62,8 @@ FcConfigGetFonts(FcConfig*, int)
 
 	file = "/sys/lib/fontsrv.map";
 	b = Bopen(file, OREAD);
+	if(b == 0)
+		return fset;
 	while((line = Brdline(b, '\n')) != nil){
 		line[Blinelen(b)-1] = 0;
 		s = strchr(line, '#');
