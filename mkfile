@@ -7,21 +7,16 @@ OFILES=\
 	fc.$O\
 	pjw.$O\
 
+BIN=/$objtype/bin
 LIBDIR=libfreetype
-#LIBDIR=/usr/glenda/src/freetype
-
 LIB=$LIBDIR/libfreetype.a$O
 LIBHFILES=$LIBDIR/builds/plan9/p9ftopt.h
-
 HFILES=dat.h $LIBHFILES
-
 CLEANFILES=pax_global_header
 
 CFLAGS=$CFLAGS -p -I$LIBDIR/builds/plan9 -I$LIBDIR/include \
 	-D'FT_CONFIG_OPTIONS_H=<p9ftopt.h>' \
 	-D'FT_CONFIG_STANDARD_LIBRARY_H=<p9lib.h>' \
-
-BIN=/$objtype/bin
 
 </sys/src/cmd/mkone
 
@@ -50,8 +45,10 @@ FT=VER-2-15-0
 
 vendor:V: freetype-$FT
 	rm -rf libfreetype; mkdir -p libfreetype
-	rfork n; \
+	{ \
+		rfork n; \
 		bind -a port freetype-$FT; \
 		bind -a port/builds freetype-$FT/builds; \
-		disk/mkfs -s freetype-$FT -d libfreetype vendor.proto
+		disk/mkfs -s freetype-$FT -d libfreetype vendor.proto; \
+	}
 	sed 1q libfreetype/README	# version
